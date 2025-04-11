@@ -1,0 +1,758 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="fas fa-users me-2"></i>Customers</h2>
+        <p class="text-muted">Manage hotspot customers</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <i class="fas fa-plus me-1"></i> Add New Customer
+        </button>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Offline">Offline</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="planFilter" class="form-select">
+                    <option value="all">All Plans</option>
+                    <option value="Basic Plan">Basic Plan</option>
+                    <option value="Premium Plan">Premium Plan</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email or username">
+                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="customersTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Plan</th>
+                        <th>Connection</th>
+                        <th>Billing Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center py-4">Loading customers data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+<nav class="mt-4" aria-label="Customers pagination">
+    <ul class="pagination justify-content-center" id="pagination">
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Previous</a>
+        </li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item disabled">
+            <a class="page-link" href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="plan" class="form-label">Plan</label>
+                            <select class="form-select" id="plan" name="plan" required>
+                                <option value="">Select a plan</option>
+                                <option value="Basic Plan">Basic Plan</option>
+                                <option value="Premium Plan">Premium Plan</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCustomerBtn">Save Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Edit Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm">
+                    <input type="hidden" id="edit_customer_id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="edit_name" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_phone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="edit_phone" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_plan" class="form-label">Plan</label>
+                            <select class="form-select" id="edit_plan" name="plan" required>
+                                <option value="">Select a plan</option>
+                                <option value="Basic Plan">Basic Plan</option>
+                                <option value="Premium Plan">Premium Plan</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="edit_address" class="form-label">Address</label>
+                            <textarea class="form-control" id="edit_address" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="edit_username" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="edit_password" name="password" placeholder="Leave blank to keep unchanged">
+                        </div>
+                        <div class="col-12">
+                            <label for="edit_notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="edit_notes" name="notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateCustomerBtn">Update Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Details Modal -->
+<div class="modal fade" id="customerDetailsModal" tabindex="-1" aria-labelledby="customerDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerDetailsModalLabel">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="customerDetailsBody">
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading customer details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editCustomerBtn">Edit Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this customer? This action cannot be undone.</p>
+                <p><strong>Warning:</strong> All billing history and connection data for this customer will also be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Connection Status Modal -->
+<div class="modal fade" id="connectionStatusModal" tabindex="-1" aria-labelledby="connectionStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="connectionStatusModalLabel">Update Connection Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="connectionStatusForm">
+                    <input type="hidden" id="connection_customer_id">
+                    <div class="mb-3">
+                        <label for="connection_status" class="form-label">Connection Status</label>
+                        <select class="form-select" id="connection_status" name="status" required>
+                            <option value="Active">Active</option>
+                            <option value="Offline">Offline</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="ipAddressField">
+                        <label for="ip_address" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="ip_address" name="ip_address" placeholder="e.g. 192.168.1.100">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateConnectionBtn">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let customersData = [];
+    
+    // Load all customers
+    function loadCustomers() {
+        const tableBody = document.querySelector('#customersTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Loading customers data...</td></tr>';
+        
+        fetch('/api/customers')
+            .then(response => response.json())
+            .then(data => {
+                customersData = data;
+                renderCustomersTable(data);
+            })
+            .catch(error => {
+                console.error('Error loading customers:', error);
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Error loading customers data</td></tr>';
+            });
+    }
+    
+    // Render customers table
+    function renderCustomersTable(customers) {
+        const tableBody = document.querySelector('#customersTable tbody');
+        tableBody.innerHTML = '';
+        
+        if (customers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No customers found</td></tr>';
+            return;
+        }
+        
+        customers.forEach(customer => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>${customer.id}</td>
+                <td>${customer.name}</td>
+                <td>${customer.username}</td>
+                <td>${customer.plan}</td>
+                <td><span class="badge ${customer.connection_status === 'Active' ? 'bg-success' : 'bg-danger'}">${customer.connection_status}</span></td>
+                <td><span class="badge ${getBillingBadgeClass(customer.latest_bill_status)}">${customer.latest_bill_status}</span></td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-info view-btn" data-id="${customer.id}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary edit-btn" data-id="${customer.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-success connection-btn" data-id="${customer.id}" data-status="${customer.connection_status}">
+                            <i class="fas fa-wifi"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger delete-btn" data-id="${customer.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Add event listeners for action buttons
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const customerId = Number(this.getAttribute('data-id'));
+                viewCustomerDetails(customerId);
+            });
+        });
+        
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const customerId = Number(this.getAttribute('data-id'));
+                editCustomer(customerId);
+            });
+        });
+        
+        document.querySelectorAll('.connection-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const customerId = Number(this.getAttribute('data-id'));
+                const status = this.getAttribute('data-status');
+                updateConnectionStatus(customerId, status);
+            });
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const customerId = Number(this.getAttribute('data-id'));
+                confirmDeleteCustomer(customerId);
+            });
+        });
+    }
+    
+    // Get badge class for billing status
+    function getBillingBadgeClass(status) {
+        switch(status) {
+            case 'Paid':
+                return 'bg-success';
+            case 'Pending':
+                return 'bg-warning';
+            case 'Overdue':
+                return 'bg-danger';
+            default:
+                return 'bg-secondary';
+        }
+    }
+    
+    // View customer details
+    function viewCustomerDetails(customerId) {
+        const detailsBody = document.getElementById('customerDetailsBody');
+        detailsBody.innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading customer details...</p>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('customerDetailsModal'));
+        modal.show();
+        
+        fetch(`/api/customers/${customerId}`)
+            .then(response => response.json())
+            .then(customer => {
+                // Update edit button with the customer ID
+                document.getElementById('editCustomerBtn').setAttribute('data-id', customer.id);
+                
+                // Format the customer details
+                detailsBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Personal Information</h6>
+                            <p><strong>Name:</strong> ${customer.name}</p>
+                            <p><strong>Email:</strong> ${customer.email}</p>
+                            <p><strong>Phone:</strong> ${customer.phone}</p>
+                            <p><strong>Address:</strong> ${customer.address}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Account Information</h6>
+                            <p><strong>Username:</strong> ${customer.username}</p>
+                            <p><strong>Plan:</strong> ${customer.plan}</p>
+                            <p><strong>Status:</strong> <span class="badge ${customer.status === 'Active' ? 'bg-success' : 'bg-danger'}">${customer.status}</span></p>
+                            <p><strong>Created:</strong> ${customer.created_at}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Connection Status</h6>
+                            <p><strong>Status:</strong> <span class="badge ${customer.connection.status === 'Active' ? 'bg-success' : 'bg-danger'}">${customer.connection.status}</span></p>
+                            <p><strong>IP Address:</strong> ${customer.connection.ip_address || 'N/A'}</p>
+                            <p><strong>Connected Since:</strong> ${customer.connection.connected_since || 'N/A'}</p>
+                            <p><strong>Last Disconnect:</strong> ${customer.connection.last_disconnect || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Notes</h6>
+                            <p>${customer.notes || 'No notes available'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6 class="fw-bold">Billing History</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Due Date</th>
+                                        <th>Payment Date</th>
+                                        <th>Payment Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${renderBillingHistory(customer.billing_history)}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error fetching customer details:', error);
+                detailsBody.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        Error loading customer details. Please try again.
+                    </div>
+                `;
+            });
+    }
+    
+    // Render billing history table
+    function renderBillingHistory(billingHistory) {
+        if (!billingHistory || billingHistory.length === 0) {
+            return '<tr><td colspan="5" class="text-center">No billing history available</td></tr>';
+        }
+        
+        return billingHistory.map(bill => `
+            <tr>
+                <td>$${bill.amount.toFixed(2)}</td>
+                <td><span class="badge ${getBillingBadgeClass(bill.status)}">${bill.status}</span></td>
+                <td>${bill.due_date}</td>
+                <td>${bill.payment_date || 'Not paid'}</td>
+                <td>${bill.payment_method || 'N/A'}</td>
+            </tr>
+        `).join('');
+    }
+    
+    // Edit customer
+    function editCustomer(customerId) {
+        // Close details modal if it's open
+        const detailsModal = bootstrap.Modal.getInstance(document.getElementById('customerDetailsModal'));
+        if (detailsModal) {
+            detailsModal.hide();
+        }
+        
+        fetch(`/api/customers/${customerId}`)
+            .then(response => response.json())
+            .then(customer => {
+                // Populate form with customer data
+                document.getElementById('edit_customer_id').value = customer.id;
+                document.getElementById('edit_name').value = customer.name;
+                document.getElementById('edit_email').value = customer.email;
+                document.getElementById('edit_phone').value = customer.phone;
+                document.getElementById('edit_address').value = customer.address;
+                document.getElementById('edit_plan').value = customer.plan;
+                document.getElementById('edit_username').value = customer.username;
+                document.getElementById('edit_password').value = '';  // Don't populate password
+                document.getElementById('edit_notes').value = customer.notes || '';
+                
+                // Show the edit modal
+                const editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching customer for edit:', error);
+                alert('Error loading customer data. Please try again.');
+            });
+    }
+    
+    // Update connection status
+    function updateConnectionStatus(customerId, currentStatus) {
+        document.getElementById('connection_customer_id').value = customerId;
+        document.getElementById('connection_status').value = currentStatus;
+        
+        // Toggle IP address field visibility based on selected status
+        toggleIpAddressField();
+        
+        const modal = new bootstrap.Modal(document.getElementById('connectionStatusModal'));
+        modal.show();
+    }
+    
+    // Toggle IP address field based on connection status
+    function toggleIpAddressField() {
+        const statusSelect = document.getElementById('connection_status');
+        const ipAddressField = document.getElementById('ipAddressField');
+        
+        if (statusSelect.value === 'Active') {
+            ipAddressField.style.display = 'block';
+        } else {
+            ipAddressField.style.display = 'none';
+        }
+    }
+    
+    // Confirm delete customer
+    function confirmDeleteCustomer(customerId) {
+        document.getElementById('confirmDeleteBtn').setAttribute('data-id', customerId);
+        const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        modal.show();
+    }
+    
+    // Event listeners
+    
+    // Edit customer details button in view modal
+    document.getElementById('editCustomerBtn').addEventListener('click', function() {
+        const customerId = Number(this.getAttribute('data-id'));
+        editCustomer(customerId);
+    });
+    
+    // Save new customer
+    document.getElementById('saveCustomerBtn').addEventListener('click', function() {
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            plan: document.getElementById('plan').value,
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+            notes: document.getElementById('notes').value
+        };
+        
+        fetch('/api/customers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('addCustomerModal')).hide();
+            
+            // Clear the form
+            document.getElementById('addCustomerForm').reset();
+            
+            // Reload the customers list
+            loadCustomers();
+            
+            // Show success message
+            alert('Customer created successfully!');
+        })
+        .catch(error => {
+            console.error('Error creating customer:', error);
+            alert('Error creating customer. Please try again.');
+        });
+    });
+    
+    // Update existing customer
+    document.getElementById('updateCustomerBtn').addEventListener('click', function() {
+        const customerId = document.getElementById('edit_customer_id').value;
+        
+        const formData = {
+            name: document.getElementById('edit_name').value,
+            email: document.getElementById('edit_email').value,
+            phone: document.getElementById('edit_phone').value,
+            address: document.getElementById('edit_address').value,
+            plan: document.getElementById('edit_plan').value,
+            username: document.getElementById('edit_username').value,
+            notes: document.getElementById('edit_notes').value
+        };
+        
+        // Only include password if it was provided
+        const password = document.getElementById('edit_password').value;
+        if (password) {
+            formData.password = password;
+        }
+        
+        fetch(`/api/customers/${customerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('editCustomerModal')).hide();
+            
+            // Reload the customers list
+            loadCustomers();
+            
+            // Show success message
+            alert('Customer updated successfully!');
+        })
+        .catch(error => {
+            console.error('Error updating customer:', error);
+            alert('Error updating customer. Please try again.');
+        });
+    });
+    
+    // Confirm delete button
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const customerId = this.getAttribute('data-id');
+        
+        fetch(`/api/customers/${customerId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+            
+            // Reload the customers list
+            loadCustomers();
+            
+            // Show success message
+            alert('Customer deleted successfully!');
+        })
+        .catch(error => {
+            console.error('Error deleting customer:', error);
+            alert('Error deleting customer. Please try again.');
+        });
+    });
+    
+    // Connection status change
+    document.getElementById('connection_status').addEventListener('change', toggleIpAddressField);
+    
+    // Update connection status
+    document.getElementById('updateConnectionBtn').addEventListener('click', function() {
+        const customerId = document.getElementById('connection_customer_id').value;
+        const status = document.getElementById('connection_status').value;
+        const ipAddress = document.getElementById('ip_address').value;
+        
+        fetch(`/api/connections/${customerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: status,
+                ip_address: ipAddress
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('connectionStatusModal')).hide();
+            
+            // Reload the customers list
+            loadCustomers();
+            
+            // Show success message
+            alert(`Connection status updated to ${status}`);
+        })
+        .catch(error => {
+            console.error('Error updating connection status:', error);
+            alert('Error updating connection status. Please try again.');
+        });
+    });
+    
+    // Search and filter functionality
+    document.getElementById('searchBtn').addEventListener('click', filterCustomers);
+    document.getElementById('searchInput').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            filterCustomers();
+        }
+    });
+    document.getElementById('statusFilter').addEventListener('change', filterCustomers);
+    document.getElementById('planFilter').addEventListener('change', filterCustomers);
+    
+    function filterCustomers() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const planFilter = document.getElementById('planFilter').value;
+        
+        const filteredCustomers = customersData.filter(customer => {
+            const matchesSearch = 
+                customer.name.toLowerCase().includes(searchTerm) ||
+                customer.email.toLowerCase().includes(searchTerm) ||
+                customer.username.toLowerCase().includes(searchTerm);
+            
+            const matchesStatus = statusFilter === 'all' || customer.connection_status === statusFilter;
+            const matchesPlan = planFilter === 'all' || customer.plan === planFilter;
+            
+            return matchesSearch && matchesStatus && matchesPlan;
+        });
+        
+        renderCustomersTable(filteredCustomers);
+    }
+    
+    // Load customers when the page loads
+    loadCustomers();
+});
+</script>
+{% endblock %}

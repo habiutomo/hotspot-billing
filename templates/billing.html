@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Billing</h2>
+        <p class="text-muted">Manage customer billing</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBillingModal">
+            <i class="fas fa-plus me-1"></i> Create New Bill
+        </button>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Overdue">Overdue</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="customerFilter" class="form-select">
+                    <option value="all">All Customers</option>
+                    <!-- Will be populated with JavaScript -->
+                </select>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by customer name">
+                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Billing Records Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="billingTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Payment Date</th>
+                        <th>Payment Method</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="8" class="text-center py-4">Loading billing data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+<nav class="mt-4" aria-label="Billing pagination">
+    <ul class="pagination justify-content-center" id="pagination">
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Previous</a>
+        </li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item disabled">
+            <a class="page-link" href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Add Billing Modal -->
+<div class="modal fade" id="addBillingModal" tabindex="-1" aria-labelledby="addBillingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBillingModalLabel">Create New Bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBillingForm">
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Customer</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">Select a customer</option>
+                            <!-- Will be populated with JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="due_date" name="due_date" required>
+                    </div>
+                    <div class="mb-3 payment-fields" style="display: none;">
+                        <label for="payment_date" class="form-label">Payment Date</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date">
+                    </div>
+                    <div class="mb-3 payment-fields" style="display: none;">
+                        <label for="payment_method" class="form-label">Payment Method</label>
+                        <select class="form-select" id="payment_method" name="payment_method">
+                            <option value="">Select a payment method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveBillingBtn">Create Bill</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Billing Modal -->
+<div class="modal fade" id="editBillingModal" tabindex="-1" aria-labelledby="editBillingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editBillingModalLabel">Edit Bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editBillingForm">
+                    <input type="hidden" id="edit_billing_id">
+                    <div class="mb-3">
+                        <label for="edit_customer_name" class="form-label">Customer</label>
+                        <input type="text" class="form-control" id="edit_customer_name" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="edit_amount" name="amount" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_status" class="form-label">Status</label>
+                        <select class="form-select" id="edit_status" name="status" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_due_date" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="edit_due_date" name="due_date" required>
+                    </div>
+                    <div class="mb-3 edit-payment-fields">
+                        <label for="edit_payment_date" class="form-label">Payment Date</label>
+                        <input type="date" class="form-control" id="edit_payment_date" name="payment_date">
+                    </div>
+                    <div class="mb-3 edit-payment-fields">
+                        <label for="edit_payment_method" class="form-label">Payment Method</label>
+                        <select class="form-select" id="edit_payment_method" name="payment_method">
+                            <option value="">Select a payment method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="edit_notes" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateBillingBtn">Update Bill</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let billingsData = [];
+    let customersData = [];
+    
+    // Load billing records
+    function loadBillings() {
+        const tableBody = document.querySelector('#billingTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">Loading billing data...</td></tr>';
+        
+        fetch('/api/billings')
+            .then(response => response.json())
+            .then(data => {
+                billingsData = data;
+                renderBillingsTable(data);
+            })
+            .catch(error => {
+                console.error('Error loading billings:', error);
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">Error loading billing data</td></tr>';
+            });
+    }
+    
+    // Load customers for dropdown
+    function loadCustomers() {
+        fetch('/api/customers')
+            .then(response => response.json())
+            .then(data => {
+                customersData = data;
+                populateCustomerDropdowns(data);
+            })
+            .catch(error => {
+                console.error('Error loading customers:', error);
+            });
+    }
+    
+    // Populate customer dropdowns
+    function populateCustomerDropdowns(customers) {
+        const customerSelect = document.getElementById('customer_id');
+        const customerFilter = document.getElementById('customerFilter');
+        
+        // Clear existing options (except first one)
+        while (customerSelect.options.length > 1) {
+            customerSelect.remove(1);
+        }
+        
+        while (customerFilter.options.length > 1) {
+            customerFilter.remove(1);
+        }
+        
+        // Add customer options to both dropdowns
+        customers.forEach(customer => {
+            const option1 = document.createElement('option');
+            option1.value = customer.id;
+            option1.textContent = customer.name;
+            customerSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = customer.id;
+            option2.textContent = customer.name;
+            customerFilter.appendChild(option2);
+        });
+    }
+    
+    // Render billings table
+    function renderBillingsTable(billings) {
+        const tableBody = document.querySelector('#billingTable tbody');
+        tableBody.innerHTML = '';
+        
+        if (billings.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No billing records found</td></tr>';
+            return;
+        }
+        
+        billings.forEach(billing => {
+            const row = document.createElement('tr');
+            
+            // Format the billing ID to show only first 8 characters
+            const shortId = billing.id.substring(0, 8) + '...';
+            
+            row.innerHTML = `
+                <td title="${billing.id}">${shortId}</td>
+                <td>${billing.customer_name}</td>
+                <td>$${billing.amount.toFixed(2)}</td>
+                <td><span class="badge ${getBillingBadgeClass(billing.status)}">${billing.status}</span></td>
+                <td>${billing.due_date}</td>
+                <td>${billing.payment_date || '-'}</td>
+                <td>${billing.payment_method || '-'}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary edit-btn" data-id="${billing.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-${billing.status === 'Pending' ? 'success' : 'secondary'} mark-paid-btn" data-id="${billing.id}" ${billing.status === 'Paid' ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Add event listeners for action buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const billingId = this.getAttribute('data-id');
+                editBilling(billingId);
+            });
+        });
+        
+        document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const billingId = this.getAttribute('data-id');
+                markBillingAsPaid(billingId);
+            });
+        });
+    }
+    
+    // Get badge class for billing status
+    function getBillingBadgeClass(status) {
+        switch(status) {
+            case 'Paid':
+                return 'bg-success';
+            case 'Pending':
+                return 'bg-warning';
+            case 'Overdue':
+                return 'bg-danger';
+            default:
+                return 'bg-secondary';
+        }
+    }
+    
+    // Toggle payment fields based on status
+    function togglePaymentFields() {
+        const status = document.getElementById('status').value;
+        const paymentFields = document.querySelectorAll('.payment-fields');
+        
+        if (status === 'Paid') {
+            paymentFields.forEach(field => field.style.display = 'block');
+            document.getElementById('payment_date').required = true;
+            document.getElementById('payment_method').required = true;
+        } else {
+            paymentFields.forEach(field => field.style.display = 'none');
+            document.getElementById('payment_date').required = false;
+            document.getElementById('payment_method').required = false;
+        }
+    }
+    
+    // Toggle edit payment fields based on status
+    function toggleEditPaymentFields() {
+        const status = document.getElementById('edit_status').value;
+        const paymentFields = document.querySelectorAll('.edit-payment-fields');
+        
+        if (status === 'Paid') {
+            paymentFields.forEach(field => field.style.display = 'block');
+            document.getElementById('edit_payment_date').required = true;
+            document.getElementById('edit_payment_method').required = true;
+        } else {
+            paymentFields.forEach(field => field.style.display = 'none');
+            document.getElementById('edit_payment_date').required = false;
+            document.getElementById('edit_payment_method').required = false;
+        }
+    }
+    
+    // Format date to YYYY-MM-DD for input fields
+    function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Edit billing
+    function editBilling(billingId) {
+        const billing = billingsData.find(b => b.id === billingId);
+        if (!billing) {
+            alert('Billing record not found');
+            return;
+        }
+        
+        // Populate form with billing data
+        document.getElementById('edit_billing_id').value = billing.id;
+        document.getElementById('edit_customer_name').value = billing.customer_name;
+        document.getElementById('edit_amount').value = billing.amount;
+        document.getElementById('edit_status').value = billing.status;
+        document.getElementById('edit_due_date').value = formatDateForInput(billing.due_date);
+        document.getElementById('edit_payment_date').value = formatDateForInput(billing.payment_date);
+        document.getElementById('edit_payment_method').value = billing.payment_method || '';
+        document.getElementById('edit_notes').value = billing.notes || '';
+        
+        // Toggle payment fields
+        toggleEditPaymentFields();
+        
+        // Show the edit modal
+        const editModal = new bootstrap.Modal(document.getElementById('editBillingModal'));
+        editModal.show();
+    }
+    
+    // Mark billing as paid
+    function markBillingAsPaid(billingId) {
+        const billing = billingsData.find(b => b.id === billingId);
+        if (!billing) {
+            alert('Billing record not found');
+            return;
+        }
+        
+        if (billing.status === 'Paid') {
+            alert('This bill is already marked as paid');
+            return;
+        }
+        
+        const today = new Date();
+        const formattedDate = formatDateForInput(today);
+        
+        fetch(`/api/billings/${billingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: 'Paid',
+                payment_date: formattedDate,
+                payment_method: 'Cash'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Reload billings
+            loadBillings();
+            alert('Bill marked as paid successfully');
+        })
+        .catch(error => {
+            console.error('Error marking bill as paid:', error);
+            alert('Error marking bill as paid. Please try again.');
+        });
+    }
+    
+    // Event listeners
+    
+    // Status change for payment fields toggling
+    document.getElementById('status').addEventListener('change', togglePaymentFields);
+    document.getElementById('edit_status').addEventListener('change', toggleEditPaymentFields);
+    
+    // Save new billing
+    document.getElementById('saveBillingBtn').addEventListener('click', function() {
+        const customerId = document.getElementById('customer_id').value;
+        const amount = document.getElementById('amount').value;
+        const status = document.getElementById('status').value;
+        const dueDate = document.getElementById('due_date').value;
+        const paymentDate = document.getElementById('payment_date').value;
+        const paymentMethod = document.getElementById('payment_method').value;
+        const notes = document.getElementById('notes').value;
+        
+        if (!customerId || !amount || !status || !dueDate) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        if (status === 'Paid' && (!paymentDate || !paymentMethod)) {
+            alert('Payment date and method are required for paid bills');
+            return;
+        }
+        
+        const formData = {
+            customer_id: parseInt(customerId),
+            amount: parseFloat(amount),
+            status: status,
+            due_date: dueDate,
+            notes: notes
+        };
+        
+        if (status === 'Paid') {
+            formData.payment_date = paymentDate;
+            formData.payment_method = paymentMethod;
+        }
+        
+        fetch('/api/billings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('addBillingModal')).hide();
+            
+            // Clear the form
+            document.getElementById('addBillingForm').reset();
+            
+            // Hide payment fields
+            document.querySelectorAll('.payment-fields').forEach(field => field.style.display = 'none');
+            
+            // Reload billings
+            loadBillings();
+            
+            // Show success message
+            alert('Billing record created successfully');
+        })
+        .catch(error => {
+            console.error('Error creating billing record:', error);
+            alert('Error creating billing record. Please try again.');
+        });
+    });
+    
+    // Update billing
+    document.getElementById('updateBillingBtn').addEventListener('click', function() {
+        const billingId = document.getElementById('edit_billing_id').value;
+        const amount = document.getElementById('edit_amount').value;
+        const status = document.getElementById('edit_status').value;
+        const dueDate = document.getElementById('edit_due_date').value;
+        const paymentDate = document.getElementById('edit_payment_date').value;
+        const paymentMethod = document.getElementById('edit_payment_method').value;
+        const notes = document.getElementById('edit_notes').value;
+        
+        if (!amount || !status || !dueDate) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        if (status === 'Paid' && (!paymentDate || !paymentMethod)) {
+            alert('Payment date and method are required for paid bills');
+            return;
+        }
+        
+        const formData = {
+            amount: parseFloat(amount),
+            status: status,
+            due_date: dueDate,
+            notes: notes
+        };
+        
+        if (status === 'Paid') {
+            formData.payment_date = paymentDate;
+            formData.payment_method = paymentMethod;
+        } else {
+            formData.payment_date = null;
+            formData.payment_method = null;
+        }
+        
+        fetch(`/api/billings/${billingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('editBillingModal')).hide();
+            
+            // Reload billings
+            loadBillings();
+            
+            // Show success message
+            alert('Billing record updated successfully');
+        })
+        .catch(error => {
+            console.error('Error updating billing record:', error);
+            alert('Error updating billing record. Please try again.');
+        });
+    });
+    
+    // Search and filter functionality
+    document.getElementById('searchBtn').addEventListener('click', filterBillings);
+    document.getElementById('searchInput').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            filterBillings();
+        }
+    });
+    document.getElementById('statusFilter').addEventListener('change', filterBillings);
+    document.getElementById('customerFilter').addEventListener('change', filterBillings);
+    
+    function filterBillings() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const customerFilter = document.getElementById('customerFilter').value;
+        
+        const filteredBillings = billingsData.filter(billing => {
+            const matchesSearch = 
+                billing.customer_name.toLowerCase().includes(searchTerm);
+            
+            const matchesStatus = statusFilter === 'all' || billing.status === statusFilter;
+            const matchesCustomer = customerFilter === 'all' || billing.customer_id.toString() === customerFilter;
+            
+            return matchesSearch && matchesStatus && matchesCustomer;
+        });
+        
+        renderBillingsTable(filteredBillings);
+    }
+    
+    // Set today's date as default for new billing
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(today.getMonth() + 1);
+    
+    document.getElementById('due_date').value = formatDateForInput(nextMonth);
+    
+    // Initialize payment fields based on status
+    togglePaymentFields();
+    
+    // Load data when the page loads
+    loadBillings();
+    loadCustomers();
+});
+</script>
+{% endblock %}

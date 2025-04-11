@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-chart-line me-2"></i>Dashboard</h2>
+        <p class="text-muted">System overview and key metrics</p>
+    </div>
+</div>
+
+<!-- Key Metrics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Total Customers</h6>
+                        <h3 class="mb-0">{{ total_customers }}</h3>
+                    </div>
+                    <div class="icon-box bg-light-primary text-primary rounded p-3">
+                        <i class="fas fa-users fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Active Connections</h6>
+                        <h3 class="mb-0">{{ active_connections }}</h3>
+                    </div>
+                    <div class="icon-box bg-light-success text-success rounded p-3">
+                        <i class="fas fa-wifi fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Monthly Revenue</h6>
+                        <h3 class="mb-0">${{ "%.2f"|format(monthly_revenue) }}</h3>
+                    </div>
+                    <div class="icon-box bg-light-info text-info rounded p-3">
+                        <i class="fas fa-dollar-sign fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Pending Payments</h6>
+                        <h3 class="mb-0">{{ pending_payments }}</h3>
+                    </div>
+                    <div class="icon-box bg-light-warning text-warning rounded p-3">
+                        <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Connection Status Chart -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Connection Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="connectionStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Billing Status Chart -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Billing Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="billingStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Customers -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Recent Customers</h5>
+                <a href="/customers" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentCustomersTable">
+                            <tr>
+                                <td colspan="3" class="text-center py-3">Loading data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Payments -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Recent Payments</h5>
+                <a href="/billing" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentPaymentsTable">
+                            <tr>
+                                <td colspan="4" class="text-center py-3">Loading data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Connection Status Chart
+    fetch('/api/reports/connections')
+        .then(response => response.json())
+        .then(data => {
+            const connectionCtx = document.getElementById('connectionStatusChart').getContext('2d');
+            new Chart(connectionCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Active', 'Offline'],
+                    datasets: [{
+                        data: [data.active_count, data.offline_count],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching connection data:', error));
+    
+    // Billing Status Chart
+    fetch('/api/reports/billing_status')
+        .then(response => response.json())
+        .then(data => {
+            const billingCtx = document.getElementById('billingStatusChart').getContext('2d');
+            new Chart(billingCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Paid', 'Pending', 'Overdue'],
+                    datasets: [{
+                        label: 'Number of Bills',
+                        data: [
+                            data.status_counts.Paid,
+                            data.status_counts.Pending,
+                            data.status_counts.Overdue
+                        ],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching billing data:', error));
+    
+    // Load Recent Customers
+    fetch('/api/customers')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('recentCustomersTable');
+            tableBody.innerHTML = '';
+            
+            // Display at most 5 recent customers
+            const recentCustomers = data.slice(0, 5);
+            
+            if (recentCustomers.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-3">No customers found</td></tr>';
+                return;
+            }
+            
+            recentCustomers.forEach(customer => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = customer.name;
+                
+                const planCell = document.createElement('td');
+                planCell.textContent = customer.plan;
+                
+                const statusCell = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = customer.connection_status === 'Active' ? 'badge bg-success' : 'badge bg-danger';
+                statusBadge.textContent = customer.connection_status;
+                statusCell.appendChild(statusBadge);
+                
+                row.appendChild(nameCell);
+                row.appendChild(planCell);
+                row.appendChild(statusCell);
+                
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching customers:', error);
+            const tableBody = document.getElementById('recentCustomersTable');
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-3">Error loading data</td></tr>';
+        });
+    
+    // Load Recent Payments
+    fetch('/api/billings')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('recentPaymentsTable');
+            tableBody.innerHTML = '';
+            
+            // Sort by date and get the 5 most recent
+            const sortedBillings = data.sort((a, b) => {
+                const dateA = a.payment_date ? new Date(a.payment_date) : new Date(a.due_date);
+                const dateB = b.payment_date ? new Date(b.payment_date) : new Date(b.due_date);
+                return dateB - dateA;
+            }).slice(0, 5);
+            
+            if (sortedBillings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No billing records found</td></tr>';
+                return;
+            }
+            
+            sortedBillings.forEach(billing => {
+                const row = document.createElement('tr');
+                
+                const customerCell = document.createElement('td');
+                customerCell.textContent = billing.customer_name;
+                
+                const amountCell = document.createElement('td');
+                amountCell.textContent = `$${billing.amount.toFixed(2)}`;
+                
+                const dateCell = document.createElement('td');
+                dateCell.textContent = billing.payment_date || billing.due_date;
+                
+                const statusCell = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                
+                if (billing.status === 'Paid') {
+                    statusBadge.className = 'badge bg-success';
+                } else if (billing.status === 'Pending') {
+                    statusBadge.className = 'badge bg-warning';
+                } else {
+                    statusBadge.className = 'badge bg-danger';
+                }
+                
+                statusBadge.textContent = billing.status;
+                statusCell.appendChild(statusBadge);
+                
+                row.appendChild(customerCell);
+                row.appendChild(amountCell);
+                row.appendChild(dateCell);
+                row.appendChild(statusCell);
+                
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching billings:', error);
+            const tableBody = document.getElementById('recentPaymentsTable');
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Error loading data</td></tr>';
+        });
+});
+</script>
+{% endblock %}

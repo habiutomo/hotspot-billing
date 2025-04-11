@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-chart-bar me-2"></i>Reports</h2>
+        <p class="text-muted">View system reports and analytics</p>
+    </div>
+</div>
+
+<!-- Report Tabs -->
+<ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="revenue-tab" data-bs-toggle="tab" data-bs-target="#revenue" type="button" role="tab" aria-controls="revenue" aria-selected="true">
+            <i class="fas fa-dollar-sign me-1"></i> Revenue
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false">
+            <i class="fas fa-wifi me-1"></i> Connections
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button" role="tab" aria-controls="billing" aria-selected="false">
+            <i class="fas fa-file-invoice-dollar me-1"></i> Billing Status
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="reportTabsContent">
+    <!-- Revenue Report -->
+    <div class="tab-pane fade show active" id="revenue" role="tabpanel" aria-labelledby="revenue-tab">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">Revenue Report</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-md-end">
+                            <div class="input-group input-group-sm me-2" style="max-width: 170px;">
+                                <span class="input-group-text">From</span>
+                                <input type="date" class="form-control" id="revenue-start-date">
+                            </div>
+                            <div class="input-group input-group-sm" style="max-width: 170px;">
+                                <span class="input-group-text">To</span>
+                                <input type="date" class="form-control" id="revenue-end-date">
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary ms-2" id="revenue-filter-btn">Filter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Total Revenue</h6>
+                                <h3 class="mb-0" id="total-revenue">$0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Transactions</h6>
+                                <h3 class="mb-0" id="transaction-count">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-3">Payment Methods Distribution</h6>
+                                <canvas id="paymentMethodsChart" height="150"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3">Revenue Details</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Payment Method</th>
+                                <th>Amount</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="revenue-details-table">
+                            <tr>
+                                <td colspan="3" class="text-center py-3">Loading revenue data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Connections Report -->
+    <div class="tab-pane fade" id="connections" role="tabpanel" aria-labelledby="connections-tab">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Connection Status Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">Connection Status</h6>
+                                </div>
+                                <canvas id="connectionStatusChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Total Customers</h6>
+                                            <h3 id="total-customers">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Active Connections</h6>
+                                            <h3 id="active-connections">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center mb-3">
+                                            <h6 class="text-muted">Active Percentage</h6>
+                                            <h3 id="active-percentage">0%</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3">Currently Active Connections</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Username</th>
+                                <th>IP Address</th>
+                                <th>Connected Since</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-connections-table">
+                            <tr>
+                                <td colspan="4" class="text-center py-3">Loading active connections...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Billing Status Report -->
+    <div class="tab-pane fade" id="billing" role="tabpanel" aria-labelledby="billing-tab">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Billing Status Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-7">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">Billing Status Distribution</h6>
+                                </div>
+                                <canvas id="billingStatusChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-3">Amounts by Status</h6>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Collection Rate</span>
+                                        <span id="collection-rate">0%</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div id="collection-rate-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-circle text-success me-2"></i> Paid</span>
+                                        <span id="paid-amount">$0.00</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-circle text-warning me-2"></i> Pending</span>
+                                        <span id="pending-amount">$0.00</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-circle text-danger me-2"></i> Overdue</span>
+                                        <span id="overdue-amount">$0.00</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
+                                        <span>Total</span>
+                                        <span id="total-amount">$0.00</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3">Status Count Details</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billing-status-table">
+                            <tr>
+                                <td colspan="3" class="text-center py-3">Loading billing status data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Charts references
+    let paymentMethodsChart = null;
+    let connectionStatusChart = null;
+    let billingStatusChart = null;
+    
+    // Set default date range for revenue report (current month)
+    function setDefaultDateRange() {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('revenue-start-date').value = formatDateForInput(firstDay);
+        document.getElementById('revenue-end-date').value = formatDateForInput(today);
+    }
+    
+    // Format date to YYYY-MM-DD for input fields
+    function formatDateForInput(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Load revenue report
+    function loadRevenueReport() {
+        const startDate = document.getElementById('revenue-start-date').value;
+        const endDate = document.getElementById('revenue-end-date').value;
+        
+        let url = '/api/reports/revenue';
+        if (startDate && endDate) {
+            url += `?start_date=${startDate}&end_date=${endDate}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Update summary data
+                document.getElementById('total-revenue').textContent = `$${data.total_revenue.toFixed(2)}`;
+                document.getElementById('transaction-count').textContent = data.transaction_count;
+                
+                // Create payment methods chart
+                updatePaymentMethodsChart(data.payment_methods);
+                
+                // Update payment methods table
+                updatePaymentMethodsTable(data.payment_methods, data.total_revenue);
+            })
+            .catch(error => {
+                console.error('Error loading revenue report:', error);
+                document.getElementById('revenue-details-table').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-3 text-danger">
+                            Error loading revenue data. Please try again.
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // Update payment methods chart
+    function updatePaymentMethodsChart(paymentMethods) {
+        const labels = Object.keys(paymentMethods);
+        const values = Object.values(paymentMethods);
+        
+        if (paymentMethodsChart) {
+            paymentMethodsChart.destroy();
+        }
+        
+        const ctx = document.getElementById('paymentMethodsChart').getContext('2d');
+        paymentMethodsChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#28a745',
+                        '#007bff',
+                        '#fd7e14',
+                        '#6f42c1',
+                        '#20c997'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 10
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Update payment methods table
+    function updatePaymentMethodsTable(paymentMethods, totalRevenue) {
+        const tableBody = document.getElementById('revenue-details-table');
+        tableBody.innerHTML = '';
+        
+        if (Object.keys(paymentMethods).length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-3">No revenue data available for the selected period</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        for (const [method, amount] of Object.entries(paymentMethods)) {
+            const percentage = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${method}</td>
+                <td>$${amount.toFixed(2)}</td>
+                <td>${percentage.toFixed(2)}%</td>
+            `;
+            
+            tableBody.appendChild(row);
+        }
+    }
+    
+    // Load connection status report
+    function loadConnectionReport() {
+        fetch('/api/reports/connections')
+            .then(response => response.json())
+            .then(data => {
+                // Update summary data
+                document.getElementById('total-customers').textContent = data.total_customers;
+                document.getElementById('active-connections').textContent = data.active_count;
+                document.getElementById('active-percentage').textContent = `${data.active_percentage.toFixed(1)}%`;
+                
+                // Create connection status chart
+                updateConnectionStatusChart(data.active_count, data.offline_count);
+                
+                // Update active connections table
+                updateActiveConnectionsTable(data.active_connections);
+            })
+            .catch(error => {
+                console.error('Error loading connection report:', error);
+                document.getElementById('active-connections-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-3 text-danger">
+                            Error loading connection data. Please try again.
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // Update connection status chart
+    function updateConnectionStatusChart(activeCount, offlineCount) {
+        if (connectionStatusChart) {
+            connectionStatusChart.destroy();
+        }
+        
+        const ctx = document.getElementById('connectionStatusChart').getContext('2d');
+        connectionStatusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Offline'],
+                datasets: [{
+                    data: [activeCount, offlineCount],
+                    backgroundColor: ['#28a745', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Update active connections table
+    function updateActiveConnectionsTable(activeConnections) {
+        const tableBody = document.getElementById('active-connections-table');
+        tableBody.innerHTML = '';
+        
+        if (activeConnections.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-3">No active connections found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        activeConnections.forEach(connection => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${connection.customer_name}</td>
+                <td>${connection.username}</td>
+                <td>${connection.ip_address || 'N/A'}</td>
+                <td>${connection.connected_since || 'N/A'}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    // Load billing status report
+    function loadBillingStatusReport() {
+        fetch('/api/reports/billing_status')
+            .then(response => response.json())
+            .then(data => {
+                // Update amounts
+                const paidAmount = data.total_amount - data.pending_amount - data.overdue_amount;
+                document.getElementById('paid-amount').textContent = `$${paidAmount.toFixed(2)}`;
+                document.getElementById('pending-amount').textContent = `$${data.pending_amount.toFixed(2)}`;
+                document.getElementById('overdue-amount').textContent = `$${data.overdue_amount.toFixed(2)}`;
+                document.getElementById('total-amount').textContent = `$${data.total_amount.toFixed(2)}`;
+                
+                // Update collection rate
+                document.getElementById('collection-rate').textContent = `${data.collection_rate.toFixed(1)}%`;
+                document.getElementById('collection-rate-bar').style.width = `${data.collection_rate}%`;
+                
+                // Create billing status chart
+                updateBillingStatusChart(data.status_counts);
+                
+                // Update billing status table
+                updateBillingStatusTable(data.status_counts);
+            })
+            .catch(error => {
+                console.error('Error loading billing status report:', error);
+                document.getElementById('billing-status-table').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-3 text-danger">
+                            Error loading billing status data. Please try again.
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // Update billing status chart
+    function updateBillingStatusChart(statusCounts) {
+        if (billingStatusChart) {
+            billingStatusChart.destroy();
+        }
+        
+        const ctx = document.getElementById('billingStatusChart').getContext('2d');
+        billingStatusChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Paid', 'Pending', 'Overdue'],
+                datasets: [{
+                    label: 'Number of Bills',
+                    data: [statusCounts.Paid, statusCounts.Pending, statusCounts.Overdue],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Update billing status table
+    function updateBillingStatusTable(statusCounts) {
+        const tableBody = document.getElementById('billing-status-table');
+        tableBody.innerHTML = '';
+        
+        const total = statusCounts.Paid + statusCounts.Pending + statusCounts.Overdue;
+        
+        if (total === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-3">No billing records found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        const statuses = [
+            { name: 'Paid', count: statusCounts.Paid, class: 'bg-success' },
+            { name: 'Pending', count: statusCounts.Pending, class: 'bg-warning' },
+            { name: 'Overdue', count: statusCounts.Overdue, class: 'bg-danger' }
+        ];
+        
+        statuses.forEach(status => {
+            const percentage = total > 0 ? (status.count / total) * 100 : 0;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="badge ${status.class}">${status.name}</span></td>
+                <td>${status.count}</td>
+                <td>${percentage.toFixed(1)}%</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    // Initialize
+    setDefaultDateRange();
+    
+    // Load initial reports
+    loadRevenueReport();
+    loadConnectionReport();
+    loadBillingStatusReport();
+    
+    // Add event listeners for tab changes to refresh charts
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            if (event.target.id === 'revenue-tab') {
+                if (paymentMethodsChart) {
+                    paymentMethodsChart.update();
+                } else {
+                    loadRevenueReport();
+                }
+            } else if (event.target.id === 'connections-tab') {
+                if (connectionStatusChart) {
+                    connectionStatusChart.update();
+                } else {
+                    loadConnectionReport();
+                }
+            } else if (event.target.id === 'billing-tab') {
+                if (billingStatusChart) {
+                    billingStatusChart.update();
+                } else {
+                    loadBillingStatusReport();
+                }
+            }
+        });
+    });
+    
+    // Add event listener for revenue filter button
+    document.getElementById('revenue-filter-btn').addEventListener('click', loadRevenueReport);
+});
+</script>
+{% endblock %}
