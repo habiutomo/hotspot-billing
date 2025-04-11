@@ -56,3 +56,6 @@ A Flask-based web application for managing internet hotspot customers, billing, 
 - GET `/api/reports/revenue` - Get revenue statistics
 - GET `/api/reports/connections` - Get connection statistics
 - GET `/api/reports/billing_status` - Get billing status overview
+
+
+habizinnia@gmail.com
