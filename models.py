@@ -153,7 +153,7 @@ class Billing:
         current_year = datetime.now().year
         total = 0
         for billing in billings:
-            if billing.status == "Paid" and billing.payment_date:
+            if (billing.status == "Paid" or billing.status == "Lunas") and billing.payment_date:
                 payment_date = billing.payment_date
                 if payment_date.month == current_month and payment_date.year == current_year:
                     total += billing.amount
@@ -161,7 +161,7 @@ class Billing:
     
     @classmethod
     def count_pending_payments(cls):
-        return sum(1 for b in billings if b.status == "Pending")
+        return sum(1 for b in billings if b.status == "Pending" or b.status == "Menunggu")
     
     @classmethod
     def delete_by_customer(cls, customer_id):
@@ -189,7 +189,7 @@ class PPPConnection:
     def __init__(self, id, customer_id, status, ip_address=None, connected_since=None, last_disconnect=None):
         self.id = id
         self.customer_id = customer_id
-        self.status = status  # Active or Offline
+        self.status = status  # Active/Aktif or Offline/Tidak Aktif
         self.ip_address = ip_address
         self.connected_since = connected_since
         self.last_disconnect = last_disconnect
@@ -199,7 +199,7 @@ class PPPConnection:
     @classmethod
     def create(cls, customer_id, status, ip_address=None):
         connection_id = str(uuid.uuid4())
-        connected_since = datetime.now() if status == "Active" else None
+        connected_since = datetime.now() if (status == "Active" or status == "Aktif") else None
         connection = cls(connection_id, customer_id, status, ip_address, connected_since, None)
         ppp_connections.append(connection)
         return connection
@@ -234,7 +234,7 @@ class PPPConnection:
     
     def update_status(self, status, ip_address=None):
         self.status = status
-        if status == "Active":
+        if status == "Active" or status == "Aktif":
             self.connected_since = datetime.now()
             self.ip_address = ip_address
         else:
