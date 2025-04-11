@@ -3,6 +3,16 @@
 
 A Flask-based web application for managing internet hotspot customers, billing, and PPP connections.
 
+![Hotspot Billing Dashboard](1.png)
+![Hotspot Billing Dashboard](2.png)
+![Hotspot Billing Dashboard](3.png)
+![Hotspot Billing Dashboard](4.png)
+![Hotspot Billing Dashboard](5.png)
+![Hotspot Billing Dashboard](6.png)
+![Hotspot Billing Dashboard](7.png)
+
+
+
 ## Features
 
 - User Authentication (Admin/Staff login)
