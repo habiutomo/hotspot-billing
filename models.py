@@ -224,7 +224,7 @@ class PPPConnection:
     
     @classmethod
     def count_active(cls):
-        return sum(1 for c in ppp_connections if c.status == "Active")
+        return sum(1 for c in ppp_connections if c.status == "Active" or c.status == "Aktif")
     
     @classmethod
     def delete_by_customer(cls, customer_id):
@@ -252,51 +252,51 @@ def init_test_data():
         
         # Create some test customers, PPP connections, and billing records
         customer1 = Customer.create(
-            "John Doe", 
-            "john@example.com", 
-            "555-1234", 
-            "123 Main St", 
-            "Basic Plan", 
-            "johndoe", 
+            "Budi Santoso", 
+            "budi@example.com", 
+            "081234567890", 
+            "Jl. Sudirman No. 123, Jakarta", 
+            "Paket Standar", 
+            "budisantoso", 
             "password123", 
-            "Regular customer"
+            "Pelanggan reguler"
         )
         
         customer2 = Customer.create(
-            "Jane Smith", 
-            "jane@example.com", 
-            "555-5678", 
-            "456 Oak Ave", 
-            "Premium Plan", 
-            "janesmith", 
+            "Siti Rahma", 
+            "siti@example.com", 
+            "085678901234", 
+            "Jl. Thamrin No. 45, Jakarta", 
+            "Paket Premium", 
+            "sitirahma", 
             "password456", 
-            "Premium customer"
+            "Pelanggan premium"
         )
         
-        # Create billing records
+        # Create billing records (using IDR currency)
         Billing.create(
             customer1.id,
-            25.00,
-            "Paid",
+            250000,  # Rp 250.000 for Basic Plan
+            "Lunas",  # Changed from "Paid" to Indonesian
             datetime.now() - timedelta(days=15),
             datetime.now() - timedelta(days=12),
-            "Credit Card",
-            "Monthly subscription"
+            "Transfer Bank",
+            "Paket Bulanan"
         )
         
         Billing.create(
             customer2.id,
-            50.00,
-            "Pending",
+            500000,  # Rp 500.000 for Premium Plan
+            "Menunggu",  # Changed from "Pending" to Indonesian
             datetime.now() + timedelta(days=5),
             None,
             None,
-            "Monthly subscription"
+            "Paket Bulanan"
         )
         
         # Update PPP connection status
         ppp1 = PPPConnection.get_by_customer(customer1.id)
-        ppp1.update_status("Active", "192.168.1.100")
+        ppp1.update_status("Aktif", "192.168.1.100")  # Changed from "Active" to Indonesian
 
 # Initialize test data
 init_test_data()
