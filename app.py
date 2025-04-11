@@ -18,7 +18,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'auth.login'
 
 # Import modules (after app is created to avoid circular imports)
 from models import User, Customer, Billing, PPPConnection
@@ -69,6 +69,25 @@ def page_not_found(e):
 def internal_server_error(e):
     now = datetime.now()
     return render_template('base.html', error="Internal server error", now=now), 500
+
+# Additional pages
+@app.route('/customers')
+@login_required
+def customers():
+    now = datetime.now()
+    return render_template('customers.html', now=now)
+
+@app.route('/billing')
+@login_required
+def billing():
+    now = datetime.now()
+    return render_template('billing.html', now=now)
+
+@app.route('/reports')
+@login_required
+def reports():
+    now = datetime.now()
+    return render_template('reports.html', now=now)
 
 # Run the application
 if __name__ == '__main__':

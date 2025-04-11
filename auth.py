@@ -22,13 +22,15 @@ def login():
         
         if not username or not password:
             flash('Please enter all fields', 'error')
-            return render_template('login.html')
+            now = datetime.now()
+            return render_template('login.html', now=now)
         
         user = User.get_by_username(username)
         
         if not user or not check_password_hash(user.password_hash, password):
             flash('Invalid username or password', 'error')
-            return render_template('login.html')
+            now = datetime.now()
+            return render_template('login.html', now=now)
         
         login_user(user)
         return redirect(url_for('dashboard'))
@@ -56,4 +58,5 @@ def profile():
         
         return redirect(url_for('dashboard'))
     
-    return render_template('profile.html')
+    now = datetime.now()
+    return render_template('profile.html', now=now)
